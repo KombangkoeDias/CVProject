@@ -1,5 +1,7 @@
 
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,6 +20,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
   File? imageFile;
+
+  Uint8List? receivedImage;
 
   void takePicture() async {
     XFile? pickedFile = await ImagePicker().pickImage(
@@ -43,6 +47,16 @@ class _HomeState extends State<Home> {
       )
     );
     var res = await req.send();
+    getPicture();
+  }
+
+  void getPicture() async {
+    var url = "http://192.168.1.105:5000/image";
+    var jsonData = await http.get(Uri.parse(url));
+    var _image = jsonData.bodyBytes;
+    setState(() {
+      receivedImage = _image;
+    });
   }
 
   @override
@@ -57,13 +71,20 @@ class _HomeState extends State<Home> {
               Container(
                 child: Image.file(imageFile!),
               ) :
-              Container(
-                child: Icon(
-                  Icons.camera_enhance_rounded,
-                  color: Colors.green,
-                  size: MediaQuery.of(context).size.width * 0.6,
-                )
+              Icon(
+                Icons.camera_enhance_rounded,
+                color: Colors.green,
+                size: MediaQuery.of(context).size.width * 0.6,
               ),
+          receivedImage != null ?
+          Container(
+              child: Image.network("http://192.168.1.105:5000/image", fit: BoxFit.cover)
+          ):
+          Icon(
+            Icons.camera_enhance_rounded,
+            color: Colors.green,
+            size: MediaQuery.of(context).size.width * 0.6,
+          ),
           Padding(
               padding: const EdgeInsets.all(30.0),
             child: ElevatedButton(
