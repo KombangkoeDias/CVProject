@@ -30,12 +30,13 @@ class _HomeState extends State<Home> {
       maxWidth: 1080,
     );
     setState(() {
+      receivedImage = null;
       imageFile = File(pickedFile!.path);
     });
   }
 
   void sendPicture(File image) async {
-    var url = "http://192.168.1.105:5000/image";
+    var url = "https://visaitazsamongkol.herokuapp.com/image";
     var imageByte = image.readAsBytesSync();
     var req = http.MultipartRequest('POST', Uri.parse(url));
     req.files.add(
@@ -46,17 +47,12 @@ class _HomeState extends State<Home> {
         filename: "flutter_image"
       )
     );
-    var res = await req.send();
-    getPicture();
-  }
-
-  void getPicture() async {
-    var url = "http://192.168.1.105:5000/image";
-    var jsonData = await http.get(Uri.parse(url));
-    var _image = jsonData.bodyBytes;
+    var res = await req.send()
+    Uint8List tmp = await res.stream.to
     setState(() {
-      receivedImage = _image;
+      receivedImage = tmp;
     });
+
   }
 
   @override
@@ -67,7 +63,7 @@ class _HomeState extends State<Home> {
           SizedBox(
             height: 50,
           ),
-          imageFile != null ?
+          imageFile != null && receivedImage == null?
               Container(
                 child: Image.file(imageFile!),
               ) :
@@ -78,12 +74,10 @@ class _HomeState extends State<Home> {
               ),
           receivedImage != null ?
           Container(
-              child: Image.network("http://192.168.1.105:5000/image", fit: BoxFit.cover)
+              child: Image.memory(receivedImage!)
           ):
-          Icon(
-            Icons.camera_enhance_rounded,
-            color: Colors.green,
-            size: MediaQuery.of(context).size.width * 0.6,
+          SizedBox(
+            height: 50,
           ),
           Padding(
               padding: const EdgeInsets.all(30.0),
